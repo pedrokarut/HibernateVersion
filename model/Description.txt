@@ -1,0 +1,1 @@
+Pacote model com suas classes de entidade
