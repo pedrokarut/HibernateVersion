@@ -1,5 +1,8 @@
 package ClassesDeInterface;
 
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
+
 public class Principal extends javax.swing.JFrame {
     
     frmColeta frmCol;
@@ -8,8 +11,13 @@ public class Principal extends javax.swing.JFrame {
     frmPontoColeta frmPost;
     frmItens frmIte;
     
+    public static EntityManagerFactory emf;
+    
+    
     public Principal() {
         initComponents();
+        
+        emf = Persistence.createEntityManagerFactory("UP");
     }
 
    
