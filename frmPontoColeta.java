@@ -14,8 +14,7 @@ public class frmPontoColeta extends javax.swing.JFrame {
     public static int codPonto;
    
     public frmPontoColeta() {
-        initComponents();
-     
+        initComponents();     
     }
 
    
