@@ -1,20 +1,33 @@
 package ClassesDeInterface;
+import DAO.MaterialJpaController;
+import DAO.PontoColetaJpaController;
+import DAO.exceptions.NonexistentEntityException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
+import model.Material;
+import model.PontoColeta;
 
 
 public class frmMaterial extends javax.swing.JFrame {
 
-    public static int codMaterial;
+    public static long codMaterial;
+    Material m;
+    MaterialJpaController MaterialJPA;
    
     public frmMaterial() {
         initComponents();
+        LimpaCampos();
+        LimpaJTable();
+        PreencheJTable();
     }
     
     private void LimpaCampos()
@@ -25,7 +38,48 @@ public class frmMaterial extends javax.swing.JFrame {
         txtTempoDecomposicao.setText(null);
         txtTipo.setText(null);
     }
+    
 
+      
+    private void LimpaJTable()
+    {
+        DefaultTableModel model = (DefaultTableModel) jTableMaterial.getModel();
+        model.setRowCount(0);
+        model.setColumnCount(0);
+        jTableMaterial.setModel(model);
+    }
+    
+    private void PreencheJTable()
+    {
+        String[] cabecalhos = {"Código do Material", "Descrição", "Nome", "Tempo de Decomposição", "Tipo"};
+        DefaultTableModel model = (DefaultTableModel) jTableMaterial.getModel();
+        model.setColumnIdentifiers(cabecalhos);
+        
+        MaterialJPA = new MaterialJpaController(Principal.emf);
+        int numObjetos = MaterialJPA.getMaterialCount();
+        List<Material> Lista = MaterialJPA.findMaterialEntities();
+        
+        for(int i=0;i<Lista.size();i++)
+        {
+            Object[][] objects = new Object[numObjetos][5];
+            
+            for(int j=0;j<numObjetos;j++)
+            {
+                Material a = new Material();
+                m = Lista.get(i);
+                objects[j][0] = m.getId();
+                objects[j][1] = m.getDescricao();
+                objects[j][2] = m.getNome();
+                objects[j][3] = m.getTempoDecomposicao();
+                objects[j][4] = m.getTipo();
+            }
+                model.addRow(new Object[]{objects[i][0], objects[i][1], objects[i][2], objects[i][3], objects[i][4]});
+
+        }
+         jTableMaterial.setModel(model); 
+        
+    }
+    
     
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -156,8 +210,7 @@ public class frmMaterial extends javax.swing.JFrame {
                                             .addComponent(txtNome)
                                             .addComponent(txtTipo))
                                         .addGap(31, 31, 31)
-                                        .addComponent(btLimpar)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                                        .addComponent(btLimpar)))
                                 .addGap(34, 34, 34)
                                 .addComponent(jLabel1))
                             .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
@@ -220,31 +273,79 @@ public class frmMaterial extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btLimparActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btLimparActionPerformed
-    }//GEN-LAST:event_btLimparActionPerformed
-
     private void btCadastrarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btCadastrarActionPerformed
-
+        m  = new Material();
+        m.setDescricao(txtDescricao.getText());
+        m.setNome(txtNome.getText());
+        m.setTempoDecomposicao(Integer.parseInt(txtTempoDecomposicao.getText()));
+        m.setTipo(txtTipo.getText());
+        MaterialJPA = new MaterialJpaController(Principal.emf);
+        MaterialJPA.create(m);
+        JOptionPane.showMessageDialog(null, "Material cadastrado com sucesso!");
+        LimpaCampos();
+        LimpaJTable();
+        PreencheJTable();
     }//GEN-LAST:event_btCadastrarActionPerformed
 
 
     
     
     private void btEditarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btEditarActionPerformed
-       
+        MaterialJPA = new MaterialJpaController(Principal.emf);
+        m  = MaterialJPA.findMaterial(Long.parseLong(txtCodMaterial.getText()));
+        m.setDescricao(txtDescricao.getText());
+        m.setNome(txtNome.getText());
+        m.setTempoDecomposicao(Integer.parseInt(txtTempoDecomposicao.getText()));
+        m.setTipo(txtTipo.getText());
+        try
+        {
+            MaterialJPA.edit(m);
+        } 
+        catch (Exception ex) 
+        {
+            Logger.getLogger(frmMaterial.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        JOptionPane.showMessageDialog(null, "Material cadastrado com sucesso!");
+        LimpaCampos();
+        LimpaJTable();
+        PreencheJTable();
     }//GEN-LAST:event_btEditarActionPerformed
 
     private void btExcluirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btExcluirActionPerformed
-  
+        MaterialJPA = new MaterialJpaController(Principal.emf);
+        try 
+        {
+            MaterialJPA.destroy(Long.parseLong(txtCodMaterial.getText()));
+        } 
+        catch (NonexistentEntityException ex)
+        {
+            Logger.getLogger(frmMaterial.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        JOptionPane.showMessageDialog(null, "Material deletado com sucesso!");
+        LimpaCampos();
+        LimpaJTable();
+        PreencheJTable();
     }//GEN-LAST:event_btExcluirActionPerformed
 
     private void jTableMaterialMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableMaterialMouseClicked
-       
+       int linha = jTableMaterial.getSelectedRow();
+       txtCodMaterial.setText(String.valueOf(jTableMaterial.getValueAt(linha, 0)));
+       txtDescricao.setText(String.valueOf(jTableMaterial.getValueAt(linha, 1)));
+       txtNome.setText(String.valueOf(jTableMaterial.getValueAt(linha, 2)));
+       txtTempoDecomposicao.setText(String.valueOf(jTableMaterial.getValueAt(linha, 3)));
+       txtTipo.setText(String.valueOf(jTableMaterial.getValueAt(linha, 4)));
     }//GEN-LAST:event_jTableMaterialMouseClicked
 
     private void btImportarMaterialActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btImportarMaterialActionPerformed
-        
+        codMaterial = Long.parseLong(txtCodMaterial.getText());
+        dispose();
     }//GEN-LAST:event_btImportarMaterialActionPerformed
+
+    private void btLimparActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btLimparActionPerformed
+        LimpaCampos();
+        LimpaJTable();
+        PreencheJTable();
+    }//GEN-LAST:event_btLimparActionPerformed
 
    
     public static void main(String args[]) {

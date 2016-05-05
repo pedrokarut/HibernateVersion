@@ -308,9 +308,6 @@ public class frmAgenteAmbiental extends javax.swing.JFrame {
         PreencheJTable();
     }//GEN-LAST:event_btEditarActionPerformed
 
-    private void btLimparActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btLimparActionPerformed
-    }//GEN-LAST:event_btLimparActionPerformed
-
     private void btExcluirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btExcluirActionPerformed
         AgenteJPA = new AgenteAmbientalJpaController(Principal.emf);
         try 
@@ -329,8 +326,15 @@ public class frmAgenteAmbiental extends javax.swing.JFrame {
     }//GEN-LAST:event_btExcluirActionPerformed
 
     private void btImportarAgenteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btImportarAgenteActionPerformed
-     
+        codAgente = Long.parseLong(txtCodColetador.getText());
+        dispose();
     }//GEN-LAST:event_btImportarAgenteActionPerformed
+
+    private void btLimparActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btLimparActionPerformed
+       LimpaCampos();
+       LimpaJTable();
+       PreencheJTable();
+    }//GEN-LAST:event_btLimparActionPerformed
 
    
   

@@ -1,25 +1,88 @@
 package ClassesDeInterface;
+import DAO.AgenteAmbientalJpaController;
+import DAO.ColetaJpaController;
+import DAO.PontoColetaJpaController;
+import DAO.exceptions.NonexistentEntityException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
+import model.AgenteAmbiental;
+import model.Coleta;
+import model.PontoColeta;
 
 
 public class frmColeta extends javax.swing.JFrame {
     
     frmAgenteAmbiental frmAge;
     frmPontoColeta frmPont;
+    Coleta c;
+    AgenteAmbiental a;
+    PontoColeta p;
+    ColetaJpaController ColetaJPA;
+    AgenteAmbientalJpaController AgenteJPA;
+    PontoColetaJpaController PontoJPA;    
+    public static long codColeta;
     
     public frmColeta() {
         initComponents();
+        LimpaCampos();
+        LimpaJTable();
+        PreencheJTable();
     }
 
-   
+   private void LimpaCampos()
+   {
+       txtCodAgente.setText(null);
+       txtCodColeta.setText(null);
+       txtCodPonto.setText(null);
+       txtData.setText(null);
+   }
     
+    private void LimpaJTable()
+    {
+        DefaultTableModel model = (DefaultTableModel) jTableColeta.getModel();
+        model.setRowCount(0);
+        model.setColumnCount(0);
+        jTableColeta.setModel(model);
+    }
+    
+    private void PreencheJTable()
+    {
+        String[] cabecalhos = {"Código da Coleta", "Data", "Código do Agente", "Código do Ponto"};
+        DefaultTableModel model = (DefaultTableModel) jTableColeta.getModel();
+        model.setColumnIdentifiers(cabecalhos);
+        
+        ColetaJPA = new ColetaJpaController(Principal.emf);
+        int numObjetos = ColetaJPA.getColetaCount();
+        List<Coleta> Lista = ColetaJPA.findColetaEntities();
+        
+        for(int i=0;i<Lista.size();i++)
+        {
+            Object[][] objects = new Object[numObjetos][5];
+            
+            for(int j=0;j<numObjetos;j++)
+            {
+                Coleta c = new Coleta();
+                c = Lista.get(i);
+                objects[j][0] = c.getId();
+                objects[j][1] = c.getDataColeta();
+                objects[j][2] = c.getCodAgente().getId();
+                objects[j][3] = c.getCodPonto().getId();
+            }
+                model.addRow(new Object[]{objects[i][0], objects[i][1], objects[i][2], objects[i][3]});
+
+        }
+         jTableColeta.setModel(model); 
+        
+    }
     
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -141,8 +204,9 @@ public class frmColeta extends javax.swing.JFrame {
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
+                                .addGap(6, 6, 6)
                                 .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                                .addGap(18, 18, 18)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                 .addComponent(btImportarColeta, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addGroup(layout.createSequentialGroup()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -162,9 +226,9 @@ public class frmColeta extends javax.swing.JFrame {
                                             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                                                 .addComponent(jLabel2)
                                                 .addGap(122, 122, 122)))
-                                        .addComponent(jLabel1)))
-                                .addGap(0, 12, Short.MAX_VALUE))
-                            .addComponent(jLabel3))
+                                        .addComponent(jLabel1))
+                                    .addComponent(jLabel3))
+                                .addGap(0, 12, Short.MAX_VALUE)))
                         .addContainerGap())
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -194,7 +258,7 @@ public class frmColeta extends javax.swing.JFrame {
                     .addComponent(jLabel1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(txtCodColeta, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 13, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jLabel5)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -216,7 +280,7 @@ public class frmColeta extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 127, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
+                        .addGap(26, 26, 26)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(btCadastrar)
                             .addComponent(btEditar)
@@ -241,28 +305,84 @@ public class frmColeta extends javax.swing.JFrame {
     }//GEN-LAST:event_btAdicionarPontoActionPerformed
 
     private void btImportarColetaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btImportarColetaActionPerformed
-        
+        codColeta = Long.parseLong(txtCodColeta.getText());
+        dispose();
     }//GEN-LAST:event_btImportarColetaActionPerformed
 
     private void formWindowGainedFocus(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowGainedFocus
-
-        
+        if(frmAgenteAmbiental.codAgente != 0)
+        {
+            txtCodAgente.setText(String.valueOf(frmAgenteAmbiental.codAgente));
+        }
+        if(frmPontoColeta.codPonto != 0)
+        {
+            txtCodPonto.setText(String.valueOf(frmPontoColeta.codPonto));
+        }
     }//GEN-LAST:event_formWindowGainedFocus
 
     private void btCadastrarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btCadastrarActionPerformed
-    
+        c = new Coleta();
+        AgenteJPA = new AgenteAmbientalJpaController(Principal.emf);
+        a  = AgenteJPA.findAgenteAmbiental(Long.parseLong(txtCodAgente.getText()));
+        PontoJPA = new PontoColetaJpaController(Principal.emf);
+        p = PontoJPA.findPontoColeta(Long.parseLong(txtCodPonto.getText()));
+        c.setCodAgente(a);
+        c.setCodPonto(p);
+        c.setDataColeta(txtData.getText());
+        ColetaJPA = new ColetaJpaController(Principal.emf);
+        ColetaJPA.create(c);
+        JOptionPane.showMessageDialog(null, "Coleta realizada com sucesso!");
+        LimpaCampos();
+        LimpaJTable();
+        PreencheJTable();
     }//GEN-LAST:event_btCadastrarActionPerformed
 
     private void btEditarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btEditarActionPerformed
- 
+        ColetaJPA = new ColetaJpaController(Principal.emf);
+        c = ColetaJPA.findColeta(Long.parseLong(txtCodColeta.getText()));
+        AgenteJPA = new AgenteAmbientalJpaController(Principal.emf);
+        a  = AgenteJPA.findAgenteAmbiental(Long.parseLong(txtCodAgente.getText()));
+        PontoJPA = new PontoColetaJpaController(Principal.emf);
+        p = PontoJPA.findPontoColeta(Long.parseLong(txtCodPonto.getText()));
+        c.setCodAgente(a);
+        c.setCodPonto(p);
+        c.setDataColeta(txtData.getText());        
+        try
+        {
+            ColetaJPA.edit(c);
+        }
+        catch (Exception ex) 
+        {
+            Logger.getLogger(frmColeta.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        JOptionPane.showMessageDialog(null, "Coleta alterada com sucesso!");
+        LimpaCampos();
+        LimpaJTable();
+        PreencheJTable();
     }//GEN-LAST:event_btEditarActionPerformed
 
     private void btExcluirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btExcluirActionPerformed
-       
+        ColetaJPA = new ColetaJpaController(Principal.emf);
+        try         
+        {
+            ColetaJPA.destroy(Long.parseLong(txtCodColeta.getText()));
+        } 
+        catch (NonexistentEntityException ex)
+        {
+            Logger.getLogger(frmColeta.class.getName()).log(Level.SEVERE, null, ex);
+        }        
+        JOptionPane.showMessageDialog(null, "Coleta deletada com sucesso!");
+        LimpaCampos();
+        LimpaJTable();
+        PreencheJTable();
     }//GEN-LAST:event_btExcluirActionPerformed
 
     private void jTableColetaMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableColetaMouseClicked
-  
+        int linha = jTableColeta.getSelectedRow();
+        txtCodColeta.setText(String.valueOf(jTableColeta.getValueAt(linha, 0)));
+        txtData.setText(String.valueOf(jTableColeta.getValueAt(linha, 1)));
+        txtCodAgente.setText(String.valueOf(jTableColeta.getValueAt(linha, 2)));
+        txtCodPonto.setText(String.valueOf(jTableColeta.getValueAt(linha, 3)));
     }//GEN-LAST:event_jTableColetaMouseClicked
 
    
