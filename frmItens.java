@@ -1,12 +1,22 @@
 package ClassesDeInterface;
+import DAO.ColetaJpaController;
+import DAO.ItensColetaJpaController;
+import DAO.MaterialJpaController;
+import DAO.exceptions.NonexistentEntityException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
+import model.Coleta;
+import model.ItensColeta;
+import model.Material;
 
 
 public class frmItens extends javax.swing.JFrame {
@@ -14,12 +24,66 @@ public class frmItens extends javax.swing.JFrame {
     
     frmMaterial frmMat;
     frmColeta frmCol;
+    public static long codItem;
+    Material m;
+    ItensColeta i;
+    Coleta c;
+    ColetaJpaController ColetaJPA;
+    MaterialJpaController MaterialJPA;
+    ItensColetaJpaController ItensJPA;
   
     public frmItens() {
         initComponents();
+        LimpaCampos();
+        LimpaJTable();
+        PreencheJTable();
     }
     
+    private void LimpaCampos()
+    {
+        txtCodColeta.setText(null);
+        txtCodItem.setText(null);
+        txtCodMaterial.setText(null);
+        txtQuantidade.setText(null);
+    }
     
+     private void LimpaJTable()
+    {
+        DefaultTableModel model = (DefaultTableModel) jTableItens.getModel();
+        model.setRowCount(0);
+        model.setColumnCount(0);
+        jTableItens.setModel(model);
+    }
+    
+    private void PreencheJTable()
+    {
+        String[] cabecalhos = {"Código do Item", "Quantidade", "Código da Coleta", "Código do Material"};
+        DefaultTableModel model = (DefaultTableModel) jTableItens.getModel();
+        model.setColumnIdentifiers(cabecalhos);
+        
+        ItensJPA = new ItensColetaJpaController(Principal.emf);
+        int numObjetos = ItensJPA.getItensColetaCount();
+        List<ItensColeta> Lista = ItensJPA.findItensColetaEntities();
+        
+        for(int i=0;i<Lista.size();i++)
+        {
+            Object[][] objects = new Object[numObjetos][5];
+            
+            for(int j=0;j<numObjetos;j++)
+            {
+                ItensColeta it = new ItensColeta();
+                it = Lista.get(i);
+                objects[j][0] = it.getId();
+                objects[j][1] = it.getQuantidade();
+                objects[j][2] = it.getCodColeta().getId();
+                objects[j][3] = it.getCodMaterial().getId();
+            }
+                model.addRow(new Object[]{objects[i][0], objects[i][1], objects[i][2], objects[i][3]});
+
+        }
+         jTableItens.setModel(model); 
+        
+    }
     
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -48,7 +112,6 @@ public class frmItens extends javax.swing.JFrame {
                 formWindowGainedFocus(evt);
             }
             public void windowLostFocus(java.awt.event.WindowEvent evt) {
-                formWindowLostFocus(evt);
             }
         });
 
@@ -211,7 +274,11 @@ public class frmItens extends javax.swing.JFrame {
     }//GEN-LAST:event_btImportarMaterialActionPerformed
 
     private void jTableItensMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableItensMouseClicked
-
+        int linha = jTableItens.getSelectedRow();
+        txtCodItem.setText(String.valueOf(jTableItens.getValueAt(linha, 0)));
+        txtQuantidade.setText(String.valueOf(jTableItens.getValueAt(linha, 1)));
+        txtCodColeta.setText(String.valueOf(jTableItens.getValueAt(linha, 2)));
+        txtCodMaterial.setText(String.valueOf(jTableItens.getValueAt(linha, 3)));
     }//GEN-LAST:event_jTableItensMouseClicked
 
     private void btImportarColetaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btImportarColetaActionPerformed
@@ -221,23 +288,73 @@ public class frmItens extends javax.swing.JFrame {
     }//GEN-LAST:event_btImportarColetaActionPerformed
 
     private void btCadastrarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btCadastrarActionPerformed
-     
+        i = new ItensColeta();
+        ColetaJPA = new ColetaJpaController(Principal.emf);
+        MaterialJPA = new MaterialJpaController(Principal.emf);
+        m = MaterialJPA.findMaterial(Long.parseLong(txtCodMaterial.getText()));
+        c = ColetaJPA.findColeta(Long.parseLong(txtCodColeta.getText()));
+        i.setCodColeta(c);
+        i.setCodMaterial(m);
+        i.setQuantidade(Integer.parseInt(txtQuantidade.getText()));
+        ItensJPA = new ItensColetaJpaController(Principal.emf);
+        ItensJPA.create(i);
+        JOptionPane.showMessageDialog(null, "Item de Coleta cadastrado com sucesso!");
+        LimpaCampos();
+        LimpaJTable();
+        PreencheJTable();
     }//GEN-LAST:event_btCadastrarActionPerformed
 
     private void btEditarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btEditarActionPerformed
-          
+        ItensJPA = new ItensColetaJpaController(Principal.emf);
+        i = ItensJPA.findItensColeta(Long.parseLong(txtCodItem.getText()));
+        ColetaJPA = new ColetaJpaController(Principal.emf);
+        MaterialJPA = new MaterialJpaController(Principal.emf);
+        m = MaterialJPA.findMaterial(Long.parseLong(txtCodMaterial.getText()));
+        c = ColetaJPA.findColeta(Long.parseLong(txtCodColeta.getText()));
+        i.setCodColeta(c);
+        i.setCodMaterial(m);
+        i.setQuantidade(Integer.parseInt(txtQuantidade.getText()));
+        
+        try 
+        {
+            ItensJPA.edit(i);
+        } 
+        catch (Exception ex) 
+        {
+            Logger.getLogger(frmItens.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        JOptionPane.showMessageDialog(null, "Item de Coleta editado com sucesso!");
+        LimpaCampos();
+        LimpaJTable();
+        PreencheJTable();
     }//GEN-LAST:event_btEditarActionPerformed
 
     private void btExcluirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btExcluirActionPerformed
-                     
+        ItensJPA = new ItensColetaJpaController(Principal.emf);
+        try 
+        {
+            ItensJPA.destroy(Long.parseLong(txtCodItem.getText()));
+        } 
+        catch (NonexistentEntityException ex) 
+        {
+            Logger.getLogger(frmItens.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        JOptionPane.showMessageDialog(null, "Item de Coleta excluído com sucesso!");
+        LimpaCampos();
+        LimpaJTable();
+        PreencheJTable();
     }//GEN-LAST:event_btExcluirActionPerformed
 
     private void formWindowGainedFocus(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowGainedFocus
-       
+       if(frmColeta.codColeta != 0)
+       {
+           txtCodColeta.setText(String.valueOf(frmColeta.codColeta));
+       }
+       if(frmMaterial.codMaterial != 0)
+       {
+           txtCodMaterial.setText(String.valueOf(frmMaterial.codMaterial));
+       }
     }//GEN-LAST:event_formWindowGainedFocus
-
-    private void formWindowLostFocus(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowLostFocus
-    }//GEN-LAST:event_formWindowLostFocus
 
     
     public static void main(String args[]) {

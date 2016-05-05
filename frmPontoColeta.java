@@ -1,22 +1,84 @@
 package ClassesDeInterface;
+import DAO.PontoColetaJpaController;
+import DAO.exceptions.NonexistentEntityException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
+import model.AgenteAmbiental;
+import model.PontoColeta;
 
 
 public class frmPontoColeta extends javax.swing.JFrame {
 
-    public static int codPonto;
+    public static long codPonto;
+    PontoColeta p;
+    PontoColetaJpaController PontoJPA;
    
     public frmPontoColeta() {
         initComponents();     
+        LimpaCampos();
+        LimpaJTable();
+        PreencheJTable();
     }
 
+     private void LimpaCampos()
+    {
+        txtCidade.setText(null);
+        txtCodPosto.setText(null);
+        txtData.setText(null);
+        txtEndereco.setText(null);
+        txtNome.setText(null);
+        txtEstado.setText(null);
+    }
+    
+    private void LimpaJTable()
+    {
+        DefaultTableModel model = (DefaultTableModel) jTablePonto.getModel();
+        model.setRowCount(0);
+        model.setColumnCount(0);
+        jTablePonto.setModel(model);
+    }
+    
+    private void PreencheJTable()
+    {
+        String[] cabecalhos = {"Código do Ponto", "Cidade", "Data de Retirada", "Endereço", "Estado", "Nome"};
+        DefaultTableModel model = (DefaultTableModel) jTablePonto.getModel();
+        model.setColumnIdentifiers(cabecalhos);
+        
+        PontoJPA = new PontoColetaJpaController(Principal.emf);
+        int numObjetos = PontoJPA.getPontoColetaCount();
+        List<PontoColeta> Lista = PontoJPA.findPontoColetaEntities();
+        
+        for(int i=0;i<Lista.size();i++)
+        {
+            Object[][] objects = new Object[numObjetos][6];
+            
+            for(int j=0;j<numObjetos;j++)
+            {
+                PontoColeta p = new PontoColeta();
+                p = Lista.get(i);
+                objects[j][0] = p.getId();
+                objects[j][1] = p.getCidade();
+                objects[j][2] = p.getDataRetirada();
+                objects[j][3] = p.getEndereco();
+                objects[j][4] = p.getEstado();
+                objects[j][5] = p.getNome();
+            }
+                model.addRow(new Object[]{objects[i][0], objects[i][1], objects[i][2], objects[i][3], objects[i][4], objects[i][5]});
+
+        }
+         jTablePonto.setModel(model); 
+        
+    }
+    
    
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -226,28 +288,80 @@ public class frmPontoColeta extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btLimparActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btLimparActionPerformed
-    }//GEN-LAST:event_btLimparActionPerformed
-
     private void btCadastrarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btCadastrarActionPerformed
-
+        p = new PontoColeta();
+        p.setCidade(txtCidade.getText());
+        p.setDataRetirada(txtData.getText());
+        p.setEndereco(txtEndereco.getText());
+        p.setEstado(txtEstado.getText());
+        p.setNome(txtNome.getText());
+        PontoJPA = new PontoColetaJpaController(Principal.emf);
+        PontoJPA.create(p);
+        JOptionPane.showMessageDialog(null, "Ponto de Coleta cadastrado com sucesso!");
+        LimpaCampos();
+        LimpaJTable();
+        PreencheJTable();
+        
     }//GEN-LAST:event_btCadastrarActionPerformed
 
     private void btEditarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btEditarActionPerformed
-
+        PontoJPA = new PontoColetaJpaController(Principal.emf);
+        p = PontoJPA.findPontoColeta(Long.parseLong(txtCodPosto.getText()));
+        p.setCidade(txtCidade.getText());
+        p.setDataRetirada(txtData.getText());
+        p.setEndereco(txtEndereco.getText());
+        p.setEstado(txtEstado.getText());
+        p.setNome(txtNome.getText());
+        try 
+        {
+            PontoJPA.edit(p);
+        }
+        catch (Exception ex) 
+        {
+            Logger.getLogger(frmPontoColeta.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        JOptionPane.showMessageDialog(null, "Ponto de Coleta editado com sucesso!");
+        LimpaCampos();
+        LimpaJTable();
+        PreencheJTable();
     }//GEN-LAST:event_btEditarActionPerformed
 
     private void jTablePontoMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTablePontoMouseClicked
-
+        int linha = jTablePonto.getSelectedRow();
+        txtCodPosto.setText(String.valueOf(jTablePonto.getValueAt(linha, 0)));
+        txtCidade.setText(String.valueOf(jTablePonto.getValueAt(linha, 1)));
+        txtData.setText(String.valueOf(jTablePonto.getValueAt(linha, 2)));
+        txtEndereco.setText(String.valueOf(jTablePonto.getValueAt(linha, 3)));
+        txtEstado.setText(String.valueOf(jTablePonto.getValueAt(linha, 4)));
+        txtNome.setText(String.valueOf(jTablePonto.getValueAt(linha, 5)));
     }//GEN-LAST:event_jTablePontoMouseClicked
 
     private void btExcluirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btExcluirActionPerformed
-  
+        PontoJPA = new PontoColetaJpaController(Principal.emf);
+        try 
+        {
+            PontoJPA.destroy(Long.parseLong(txtCodPosto.getText()));
+        } 
+        catch (NonexistentEntityException ex)
+        {
+            Logger.getLogger(frmPontoColeta.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        JOptionPane.showMessageDialog(null, "Ponto de Coleta editado com sucesso!");
+        LimpaCampos();
+        LimpaJTable();
+        PreencheJTable();
     }//GEN-LAST:event_btExcluirActionPerformed
 
     private void btImportarPontoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btImportarPontoActionPerformed
- 
+        codPonto = Long.parseLong(txtCodPosto.getText());
+        dispose();
     }//GEN-LAST:event_btImportarPontoActionPerformed
+
+    private void btLimparActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btLimparActionPerformed
+        LimpaCampos();
+        LimpaJTable();
+        PreencheJTable();
+    }//GEN-LAST:event_btLimparActionPerformed
 
     
     public static void main(String args[]) {
